@@ -12,7 +12,7 @@ html, body {
 h1 {
     margin-top: 20px;
     color: white;
-    font-size: calc(20px + 4vw);
+    font-size: calc(200px + 4vw);
     position: absolute;
     top: 5%;
     left: 50%;
