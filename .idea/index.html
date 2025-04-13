@@ -67,13 +67,8 @@
   let particles = [];
   let isFiring = false;
 
-  // Audio elements for different firework sounds (now using local files)
   const audioElements = {
-    // launch: new Audio('sounds/explosion.mp3'),
-    // explode1: new Audio('sounds/explosion.mp3'),
-    // explode2: new Audio('sounds/explosion.mp3'),
-    // explode3: new Audio('sounds/explosion.mp3'),
-    // crackle: new Audio('csounds/explosion.mp3')
+
 
 
     launch: new Audio('sounds/endloanch.mp3'),
@@ -83,7 +78,6 @@
     crackle: new Audio('sounds/endc.mp3')
   };
 
-  // Preload audio files
   function preloadAudio() {
     Object.values(audioElements).forEach(audio => {
       audio.volume = 0.3;
@@ -99,7 +93,6 @@
         audioElements.launch.currentTime = 0;
         audioElements.launch.play();
       } else {
-        // Randomly select an explosion sound
         const explodeSounds = ['explode1', 'explode2', 'explode3'];
         const soundKey = explodeSounds[Math.floor(Math.random() * explodeSounds.length)];
         audioElements[soundKey].currentTime = 0;
