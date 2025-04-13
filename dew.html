@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Firework Launcher 🎆</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+Sinhala&family=Poppins:wght@400;600&display=swap">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+      overflow: hidden;
+      text-align: center;
+      font-family: 'Poppins', 'Noto Serif Sinhala', sans-serif;
+      height: 100%;
+      width: 100%;
+      color: #fff;
+    }
+
+    h1 {
+      margin-top: 30px;
+      font-size: 2.5rem;
+      color: #ffffff;
+      text-shadow: 0 0 10px #FFD740, 0 0 20px #FF4081;
+    }
+
+    .button {
+      background: linear-gradient(135deg, #ff4081, #ffd740);
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      border-radius: 30px;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 0 15px #FF4081;
+      transition: all 0.3s ease;
+    }
+
+    .button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 25px #FFD740;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    p {
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<h1>🎆 20 Firework Categories 🎇</h1>
+<button class="button" id="fireBtn">✨ Launch Random Fireworks</button>
+<p>Click to see multiple random firework types!</p>
+<p style="font-size: 14px;">v2.0.1 | 星空版</p>
+
+<canvas id="canvas"></canvas>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let cw, ch;
+  let fireworks = [];
+  let particles = [];
+
+  function resizeCanvas() {
+    cw = canvas.width = window.innerWidth;
+    ch = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  function random(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+  function playFireworkSound() {
+    const audio = new Audio("https://freesound.org/data/previews/273/273003_5121236-lq.mp3");
+    audio.volume = 0.4;
+    audio.play();
+  }
+
+  class Particle {
+    constructor(x, y, color) {
+      this.x = x;
+      this.y = y;
+      this.color = color;
+      this.angle = random(0, Math.PI * 2);
+      this.speed = random(1, 10);
+      this.gravity = 0.05;
+      this.alpha = 1;
+      this.decay = random(0.015, 0.03);
+    }
+
+    update() {
+      this.x += Math.cos(this.angle) * this.speed;
+      this.y += Math.sin(this.angle) * this.speed + this.gravity;
+      this.alpha -= this.decay;
+    }
+
+    draw(ctx) {
+      ctx.globalAlpha = this.alpha;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function Firework(x, y, tx, ty, type) {
+    const fwType = fireworkTypes[type] || fireworkTypes.classic;
+    this.x = x;
+    this.y = y;
+    this.tx = tx;
+    this.ty = ty;
+    this.color = fwType.colors[Math.floor(Math.random() * fwType.colors.length)];
+    this.type = type;
+    this.distance = Math.hypot(tx - x, ty - y);
+    this.speed = this.distance / 1.5;
+    this.angle = Math.atan2(ty - y, tx - x);
+  }
+
+  Firework.prototype.update = function () {
+    const vx = Math.cos(this.angle) * this.speed * 0.05;
+    const vy = Math.sin(this.angle) * this.speed * 0.05;
+    this.x += vx;
+    this.y += vy;
+
+    const reached = Math.hypot(this.tx - this.x, this.ty - this.y) < 10;
+    if (reached) {
+      explode(this.x, this.y, this.type);
+      return true;
+    }
+    return false;
+  }
+
+  Firework.prototype.draw = function () {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+  }
+
+  function explode(x, y, type) {
+    const fwType = fireworkTypes[type] || fireworkTypes.classic;
+    playFireworkSound();
+
+    for (let i = 0; i < fwType.particles; i++) {
+      const particle = new Particle(x, y, fwType.colors[Math.floor(Math.random() * fwType.colors.length)]);
+      particle.gravity = fwType.gravity;
+      particle.angle = random(0, Math.PI * 2);
+      particles.push(particle);
+    }
+  }
+
+  function animate() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+    ctx.fillRect(0, 0, cw, ch);
+
+    fireworks = fireworks.filter(fw => {
+      const done = fw.update();
+      fw.draw();
+      return !done;
+    });
+
+    particles = particles.filter(p => {
+      p.update();
+      p.draw(ctx);
+      return p.alpha > 0;
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  const fireworkTypes = {
+    classic: { colors: ['#FF5252', '#FFD740', '#69F0AE', '#448AFF'], particles: 100, gravity: 0.08 },
+    willow: { colors: ['#FFAB40', '#FFD740', '#FFFF8D'], particles: 120, gravity: 0.05 },
+    palm: { colors: ['#FF6E40', '#FFD740'], particles: 90, gravity: 0.03 },
+    ring: { colors: ['#40C4FF', '#18FFFF', '#B388FF'], particles: 80, gravity: 0 },
+    crossette: { colors: ['#FF4081', '#E040FB'], particles: 110, gravity: 0.08 },
+    spider: { colors: ['#EEFF41', '#F4FF81'], particles: 100, gravity: 0.03 },
+    peony: { colors: ['#FF8A80', '#FFD180'], particles: 130, gravity: 0.1 },
+    chrysanthemum: { colors: ['#B9F6CA', '#CCFF90'], particles: 140, gravity: 0.07 },
+    dahlia: { colors: ['#B388FF', '#D1C4E9'], particles: 150, gravity: 0.09 },
+    diadem: { colors: ['#FFFF00', '#FFEA00'], particles: 150, gravity: 0.15 },
+    horsetail: { colors: ['#FF9E80'], particles: 80, gravity: 0.2 },
+    kamuro: { colors: ['#E0E0E0'], particles: 100, gravity: 0.12 },
+    maroon: { colors: ['#D50000'], particles: 90, gravity: 0.18 },
+    mine: { colors: ['#00E676'], particles: 70, gravity: 0.25 },
+    multibreak: { colors: ['#FF9100'], particles: 200, gravity: 0.1 },
+    serpentine: { colors: ['#0091EA'], particles: 110, gravity: 0.04 },
+    strobe: { colors: ['#FFFFFF'], particles: 120, gravity: 0.06 },
+    timerain: { colors: ['#84FFFF'], particles: 130, gravity: 0.3 },
+    fish: { colors: ['#FF4081'], particles: 90, gravity: -0.1 },
+    tourbillion: { colors: ['#651FFF'], particles: 100, gravity: 0 }
+  };
+
+  document.getElementById('fireBtn').addEventListener('click', () => {
+    const typeKeys = Object.keys(fireworkTypes);
+    for (let i = 0; i < 5; i++) {
+      const randomType = typeKeys[Math.floor(Math.random() * typeKeys.length)];
+      const x = random(cw * 0.2, cw * 0.8);
+      const tx = random(cw * 0.3, cw * 0.7);
+      const y = ch;
+      const ty = random(ch * 0.1, ch * 0.5);
+      fireworks.push(new Firework(x, y, tx, ty, randomType));
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Firework Launcher 🎆</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+Sinhala&family=Poppins:wght@400;600&display=swap">
+
+  <link rel="stylesheet" href="styles/firescc.css"></link>
+<!--  <link rel="stylesheet" href="style/media.css"></link>-->
+<!--  <link rel="stylesheet" href="lib/normalize.css"></link>-->
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Sinhala&family=Poppins:wght@400;600&display=swap');
+
+    /*html, body {*/
+    /*  margin: 0;*/
+    /*  padding: 0;*/
+    /*  background: linear-gradient(to bottom, #000428, #004e92);*/
+    /*  overflow: hidden;*/
+    /*  text-align: center;*/
+    /*  font-family: 'Poppins', 'Noto Serif Sinhala', sans-serif;*/
+    /*  height: 100%;*/
+    /*  width: 100%;*/
+    /*}*/
+
+    /*h1 {*/
+    /*  margin-top: 20px;*/
+    /*  color: white;*/
+    /*  font-size: calc(20px + 4vw);*/
+    /*  position: absolute;*/
+    /*  top: 5%;*/
+    /*  left: 50%;*/
+    /*  transform: translateX(-50%);*/
+    /*  z-index: 10;*/
+    /*  text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);*/
+    /*  white-space: nowrap;*/
+    /*  font-weight: 600;*/
+    /*  letter-spacing: 1px;*/
+    /*}*/
+
+    /*canvas {*/
+    /*  display: block;*/
+    /*  width: 100%;*/
+    /*  height: 100%;*/
+    /*  position: absolute;*/
+    /*  top: 0;*/
+    /*  left: 0;*/
+    /*}*/
+
+    /*.button {*/
+    /*  position: fixed;*/
+    /*  bottom: 15%;*/
+    /*  left: 50%;*/
+    /*  transform: translateX(-50%);*/
+    /*  padding: 20px 50px;*/
+    /*  font-size: 20px;*/
+    /*  background: linear-gradient(45deg, #ff512f, #dd2476);*/
+    /*  color: white;*/
+    /*  border: none;*/
+    /*  border-radius: 50px;*/
+    /*  cursor: pointer;*/
+    /*  z-index: 10;*/
+    /*  transition: all 0.3s ease;*/
+    /*  -webkit-tap-highlight-color: transparent;*/
+    /*  box-shadow: 0 4px 15px rgba(221, 36, 118, 0.4);*/
+    /*  font-weight: 600;*/
+    /*  letter-spacing: 1px;*/
+    /*}*/
+
+    /*.button:hover {*/
+    /*  background: linear-gradient(45deg, #dd2476, #ff512f);*/
+    /*  box-shadow: 0 6px 20px rgba(221, 36, 118, 0.6);*/
+    /*  transform: translateX(-50%) scale(1.05);*/
+    /*}*/
+
+    /*.button:active {*/
+    /*  transform: translateX(-50%) scale(0.98);*/
+    /*}*/
+
+    /*.button:disabled {*/
+    /*  background: linear-gradient(45deg, #555, #888);*/
+    /*  transform: translateX(-50%) scale(1);*/
+    /*  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);*/
+    /*}*/
+
+    /*p {*/
+    /*  position: fixed;*/
+    /*  bottom: 5%;*/
+    /*  left: 50%;*/
+    /*  transform: translateX(-50%);*/
+    /*  margin: 0;*/
+    /*  font-size: 14px;*/
+    /*  color: rgba(255, 255, 255, 0.7);*/
+    /*  z-index: 10;*/
+    /*}*/
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 28px;
+        margin-top: 15px;
+      }
+
+      .button {
+        padding: 16px 40px;
+        font-size: 18px;
+        bottom: 20%;
+      }
+
+      p {
+        font-size: 12px;
+        bottom: 8%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .button {
+        padding: 18px 45px;
+        font-size: 19px;
+        bottom: 25%;
+      }
+
+      p {
+        font-size: 13px;
+        bottom: 12%;
+      }
+    }
+  </style>
+</head>
+<body>
+<h1>🎆 Local අහස්කූරු 🎇</h1>
+
+<button class="button" id="fireBtn">✨ Launch Fireworks</button>
+<p style="margin: -10px 0 30px; color: rgba(255,255,255,0.6);">Click to start the celebration!</p>
+<p style="margin: -10px 0 10px; color: rgba(255,255,255,0.5); font-size: 14px;">v1.1.0</p>
+
+<canvas id="canvas"></canvas>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const button = document.getElementById('fireBtn');
+  const ctx = canvas.getContext('2d');
+  let cw = window.innerWidth;
+  let ch = window.innerHeight;
+  canvas.width = cw;
+  canvas.height = ch;
+
+  let fireworks = [];
+  let particles = [];
+  let isFiring = false;
+
+  // Audio elements for different firework sounds (now using local files)
+  const audioElements = {
+    // launch: new Audio('sounds/explosion.mp3'),
+    // explode1: new Audio('sounds/explosion.mp3'),
+    // explode2: new Audio('sounds/explosion.mp3'),
+    // explode3: new Audio('sounds/explosion.mp3'),
+    // crackle: new Audio('csounds/explosion.mp3')
+
+
+    launch: new Audio('sounds/endloanch.mp3'),
+    explode1: new Audio('sounds/endc.mp3'),
+    explode2: new Audio('sounds/endc.mp3'),
+    explode3: new Audio('sounds/endc.mp3'),
+    crackle: new Audio('sounds/endc.mp3')
+  };
+
+  // Preload audio files
+  function preloadAudio() {
+    Object.values(audioElements).forEach(audio => {
+      audio.volume = 0.3;
+      audio.load();
+    });
+  }
+
+  preloadAudio();
+
+  function playFireworkSound(type) {
+    try {
+      if (type === 'launch') {
+        audioElements.launch.currentTime = 0;
+        audioElements.launch.play();
+      } else {
+        // Randomly select an explosion sound
+        const explodeSounds = ['explode1', 'explode2', 'explode3'];
+        const soundKey = explodeSounds[Math.floor(Math.random() * explodeSounds.length)];
+        audioElements[soundKey].currentTime = 0;
+        audioElements[soundKey].play();
+
+        // Sometimes add crackle effect
+        if (Math.random() > 0.7) {
+          setTimeout(() => {
+            audioElements.crackle.currentTime = 0;
+            audioElements.crackle.play();
+          }, 300);
+        }
+      }
+    } catch (e) {
+      console.log('Audio playback error:', e);
+    }
+  }
+
+  button.addEventListener('click', () => {
+    if (!isFiring) {
+      launchFireworksShow();
+      isFiring = true;
+      button.disabled = true;
+      button.innerText = "🎇 Fireworks in the Sky!";
+
+      setTimeout(() => {
+        isFiring = false;
+        button.disabled = false;
+        button.innerText = "✨ Launch Fireworks";
+      }, 5000);
+    }
+  });
+
+  function random(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+  function Firework(x, y, tx, ty, color) {
+    this.x = x;
+    this.y = y;
+    this.tx = tx;
+    this.ty = ty;
+    this.distance = Math.hypot(tx - x, ty - y);
+    this.color = color || getRandomColor();
+
+    const duration = random(1500, 2500);
+    this.speed = this.distance / (duration / 1000);
+
+    this.angle = Math.atan2(ty - y, tx - x);
+    this.brightness = random(70, 90);
+    this.alpha = 1;
+    this.trail = [];
+    this.lastPos = 8;
+    this.startTime = Date.now();
+    this.sparkleIntensity = random(0.5, 1.5);
+  }
+
+  function getRandomColor() {
+    const colors = [
+      '#FF5252', '#FF4081', '#E040FB', '#7C4DFF',
+      '#536DFE', '#448AFF', '#40C4FF', '#18FFFF',
+      '#64FFDA', '#69F0AE', '#B2FF59', '#EEFF41',
+      '#FFFF00', '#FFD740', '#FFAB40', '#FF6E40'
+    ];
+    return colors[Math.floor(random(0, colors.length))];
+  }
+
+  Firework.prototype.update = function(index) {
+    const maxAnimTime = 3000;
+    if (Date.now() - this.startTime > maxAnimTime) {
+      this.trail = [];
+    }
+
+    this.trail.push([this.x, this.y]);
+    if (this.trail.length > this.lastPos) this.trail.shift();
+
+    // Add some wobble for more organic movement
+    const wobbleX = Math.sin(this.y * 0.01) * random(-1, 1);
+    const wobbleY = Math.cos(this.x * 0.01) * random(-1, 1);
+
+    const delta = 1 / 60;
+
+    const vx = Math.cos(this.angle) * this.speed * delta + wobbleX;
+    const vy = Math.sin(this.angle) * this.speed * delta + wobbleY;
+
+    this.x += vx;
+    this.y += vy;
+
+    if (Math.hypot(this.tx - this.x, this.ty - this.y) < 15) {
+      fireworks.splice(index, 1);
+      return true;
+    }
+    return false;
+  };
+
+  Firework.prototype.draw = function() {
+    if (this.trail.length === 0) return;
+
+    // Draw glow effect
+    const gradient = ctx.createRadialGradient(
+            this.x, this.y, 0,
+            this.x, this.y, 15
+    );
+    gradient.addColorStop(0, this.color);
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Draw trail
+    ctx.beginPath();
+    ctx.moveTo(this.trail[0][0], this.trail[0][1]);
+    for (let i = 1; i < this.trail.length; i++) {
+      ctx.lineTo(this.trail[i][0], this.trail[i][1]);
+    }
+
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 3 * this.sparkleIntensity;
+    ctx.stroke();
+
+    // Add sparkles along the trail
+    for (let i = 0; i < this.trail.length; i += 2) {
+      const size = random(1, 3) * this.sparkleIntensity;
+      ctx.beginPath();
+      ctx.arc(this.trail[i][0], this.trail[i][1], size, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.fill();
+    }
+  };
+
+  function Particle(x, y, color) {
+    this.x = x;
+    this.y = y;
+    this.speed = random(5, 25);
+    this.angle = random(0, Math.PI * 2);
+    this.gravity = 0.1;
+    this.friction = 0.92;
+    this.alpha = 1;
+    this.decay = random(0.015, 0.03);
+    this.color = color || getRandomColor();
+    this.size = random(2, 5);
+    this.life = 1;
+  }
+
+  Particle.prototype.update = function(index) {
+    this.speed *= this.friction;
+    this.x += Math.cos(this.angle) * this.speed;
+    this.y += Math.sin(this.angle) * this.speed + this.gravity;
+    this.alpha = this.life;
+    this.life -= this.decay;
+
+    // Add some flickering effect
+    if (Math.random() < 0.1) {
+      this.size = random(1, 4);
+    }
+
+    if (this.life <= 0) particles.splice(index, 1);
+  };
+
+  Particle.prototype.draw = function() {
+    ctx.globalAlpha = this.alpha;
+
+    // Draw glow effect
+    const gradient = ctx.createRadialGradient(
+            this.x, this.y, 0,
+            this.x, this.y, this.size * 2
+    );
+    gradient.addColorStop(0, this.color);
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Draw core particle
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+
+    ctx.globalAlpha = 1;
+  };
+
+  function explode(x, y, color) {
+    playFireworkSound('explode');
+
+    const numParticles = Math.floor(random(100, 250));
+    const explosionType = Math.random();
+
+    for (let i = 0; i < numParticles; i++) {
+      let angle, speed;
+
+      if (explosionType < 0.3) {
+        // Circular explosion
+        angle = random(0, Math.PI * 2);
+        speed = random(5, 20);
+      } else if (explosionType < 0.6) {
+        // Star-shaped explosion
+        const points = 5 + Math.floor(random(0, 3));
+        angle = (i % points) * (Math.PI * 2 / points) + random(-0.2, 0.2);
+        speed = random(10, 25);
+      } else {
+        // Spiral explosion
+        angle = (i / numParticles) * Math.PI * 4;
+        speed = random(5, 15) * (1 + (i / numParticles));
+      }
+
+      const particle = new Particle(x, y, color || getRandomColor());
+      particle.angle = angle;
+      particle.speed = speed;
+      particle.gravity = random(0.05, 0.15);
+
+      // 10% chance to be a sparkle particle
+      if (Math.random() < 0.1) {
+        particle.size = random(1, 2);
+        particle.color = 'white';
+        particle.decay = random(0.03, 0.06);
+      }
+
+      particles.push(particle);
+    }
+  }
+
+  function loop() {
+    // Create a subtle gradient background
+    const gradient = ctx.createLinearGradient(0, 0, 0, ch);
+    gradient.addColorStop(0, '#000428');
+    gradient.addColorStop(1, '#004e92');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, cw, ch);
+
+    // Add fading effect instead of clear
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.fillRect(0, 0, cw, ch);
+
+    // Draw stars in background
+    drawStars();
+
+    fireworks.forEach((f, i) => {
+      const reachedTarget = f.update(i);
+      f.draw();
+      if (reachedTarget) {
+        explode(f.x, f.y, f.color);
+      }
+    });
+
+    particles.forEach((p, i) => {
+      p.update(i);
+      p.draw();
+    });
+
+    requestAnimationFrame(loop);
+  }
+
+  // Starfield background
+  let stars = [];
+  function initStars() {
+    stars = [];
+    for (let i = 0; i < 100; i++) {
+      stars.push({
+        x: random(0, cw),
+        y: random(0, ch),
+        size: random(0.5, 2),
+        opacity: random(0.1, 0.8),
+        speed: random(0.01, 0.05)
+      });
+    }
+  }
+
+  function drawStars() {
+    stars.forEach(star => {
+      star.y += star.speed;
+      if (star.y > ch) {
+        star.y = 0;
+        star.x = random(0, cw);
+      }
+
+      ctx.globalAlpha = star.opacity;
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function launchFirework() {
+    const x = random(cw * 0.1, cw * 0.9);
+    const y = ch;
+    const tx = random(cw * 0.2, cw * 0.8);
+    const ty = random(ch * 0.1, ch * 0.4);
+    const color = getRandomColor();
+    fireworks.push(new Firework(x, y, tx, ty, color));
+    playFireworkSound('launch');
+  }
+
+  function launchFireworksShow() {
+    // Launch initial center firework
+    setTimeout(() => {
+      const x = cw / 2;
+      const y = ch;
+      const tx = cw / 2;
+      const ty = ch * 0.3;
+      const color = getRandomColor();
+      fireworks.push(new Firework(x, y, tx, ty, color));
+      playFireworkSound('launch');
+    }, 0);
+
+    // Launch surrounding fireworks
+    const numFireworks = 5 + Math.floor(random(0, 6));
+    for (let i = 0; i < numFireworks; i++) {
+      setTimeout(() => {
+        launchFirework();
+      }, random(300, 1500));
+    }
+
+    // Launch finale fireworks
+    setTimeout(() => {
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+          launchFirework();
+        }, i * 300);
+      }
+    }, 2500);
+  }
+
+  loop();
+  initStars();
+
+  window.addEventListener('resize', () => {
+    cw = window.innerWidth;
+    ch = window.innerHeight;
+    canvas.width = cw;
+    canvas.height = ch;
+    initStars();
+  });
+</script>
+</body>
+</html>
