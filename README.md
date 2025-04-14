@@ -2,4 +2,4 @@
 
 
 ## Fireworkes
-[Fire Now !!! ](online-fireworks.vercel.app)
+[Fire Now !!! ](https://dilshanhesara-fireworks.vercel.app)
